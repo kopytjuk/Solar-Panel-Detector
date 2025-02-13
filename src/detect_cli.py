@@ -21,6 +21,8 @@ def images_to_csv(input_folder, output_csv):
 
     overview_df = pd.read_csv(input_folder / "buildings.csv")
 
+    detections = list()
+
     for _, building in tqdm(overview_df.iterrows(), total=len(overview_df)):
 
         image_filepath = input_folder / building['filename']
@@ -40,23 +42,32 @@ def images_to_csv(input_folder, output_csv):
         result = results[0]
         detected_boxes = result.boxes
 
-        for detected_box in detected_boxes:
+        for i, detected_box in enumerate(detected_boxes):
 
             confidence_value = detected_box.conf.tolist()[0]
             bx = detected_box.xyxy.flatten().tolist()
             detection_bbox = box(bx[0], bx[1], bx[2], bx[3])
 
-            # IoU
-            intersect = building_polygon.intersection(detection_bbox).area
-            union = building_polygon.union(detection_bbox).area
-            iou_value = intersect / union
+            # Intersection over Union (IoU) 
+            intersect = building_polygon.intersection(detection_bbox)
+            union = building_polygon.union(detection_bbox)
+            iou_value = intersect.area / union.area
 
+            # Percentage of the box within the building's extent
+            percentage_detection_within_building = intersect.area / detection_bbox.area
 
-            
-            print("IoU:", iou_value)
-            print("Confidence:", confidence_value)
+            detections.append({
+                "building_id": building['building_id'],
+                "detection_nr": i,
+                "confidence": confidence_value,
+                "iou": iou_value,
+                "percentage_detection_within_building": percentage_detection_within_building,
+                "detection_bbox": detection_bbox.wkt
+            })
 
-        # TODO check if the boxes overlap with the extent of the building
+        detections_df = pd.DataFrame(detections)
+        detections_df.to_csv(output_csv, index=False)
+
 
 if __name__ == '__main__':
     images_to_csv()

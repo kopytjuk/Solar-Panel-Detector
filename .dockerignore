@@ -1,0 +1,12 @@
+reports
+images
+models
+__pycache__
+notebooks
+.venv
+Makefile
+
+# Ignore generated files
+**/*.pyc
+
+!models/final-mosaic-augmentation.pt
