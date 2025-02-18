@@ -19,18 +19,18 @@ def images_to_csv(input_folder, output_csv):
     Accepts a folder of images and outputs a CSV file with filenames and their sizes.
     """
 
-    overview_df = pd.read_csv(input_folder / "buildings.csv")
+    overview_df = pd.read_csv(input_folder / "overview.csv")
 
     detections = list()
 
     for _, building in tqdm(overview_df.iterrows(), total=len(overview_df)):
 
-        image_filepath = input_folder / building['filename']
+        image_filepath = input_folder / building['image_filename']
 
         if image_filepath.suffix.lower() not in SUPPORTED_FILEFORMATS:
             continue
 
-        building_polygon: Polygon = from_wkt(building['building_geometry_wkt'])
+        building_polygon: Polygon = from_wkt(building['geometry_px_wkt'])
 
         image = Image.open(image_filepath)
         results = model(image, stream=True, conf=0.5)
