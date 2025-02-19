@@ -42,27 +42,34 @@ def images_to_csv(input_folder, output_csv):
         result = results[0]
         detected_boxes = result.boxes
 
+        default_px_resolution = 0.1  # meters per pixel
+        res_x_px = building.get('res_x_px', default_px_resolution)
+        res_y_px = building.get('res_y_px', default_px_resolution)
+
         for i, detected_box in enumerate(detected_boxes):
 
             confidence_value = detected_box.conf.tolist()[0]
             bx = detected_box.xyxy.flatten().tolist()
             detection_bbox = box(bx[0], bx[1], bx[2], bx[3])
 
-            # Intersection over Union (IoU) 
+            # Intersection over Union (IoU)
             intersect = building_polygon.intersection(detection_bbox)
             union = building_polygon.union(detection_bbox)
             iou_value = intersect.area / union.area
 
             # Percentage of the box within the building's extent
-            percentage_detection_within_building = intersect.area / detection_bbox.area
+            percentage_detection_within_building = \
+                intersect.area / detection_bbox.area
 
             detections.append({
                 "building_id": building['building_id'],
                 "detection_nr": i,
                 "confidence": confidence_value,
                 "iou": iou_value,
-                "percentage_detection_within_building": percentage_detection_within_building,
-                "detection_bbox": detection_bbox.wkt
+                "percentage_detection_within_building":
+                    percentage_detection_within_building,
+                "detection_bbox": detection_bbox.wkt,
+                "area_m2": detection_bbox.area*res_x_px*res_y_px
             })
 
         detections_df = pd.DataFrame(detections)
